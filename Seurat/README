@@ -2,4 +2,5 @@
 
 This analysis aims to perform single-cell clustering and differential gene expression analysis on bone marrow and spleen samples using Seurat. 
 The goal is to identify and annotate distinct B cell subpopulations, determine cluster proportions across genotypes, and identify differentially 
-expressed genes using various statistical methods. All libraries used are specified on the markdown document.
+expressed genes using various statistical methods. All libraries used are specified on the markdown document and pdf documents (that have been 
+divided in two due to size issues).
