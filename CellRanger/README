@@ -1,1 +1,4 @@
-
+############# OBJECTIVE ############# 
+This pipeline utilizes 10x Genomics Cell Ranger v7.1.0 to process raw sequencing FASTQ files. It integrates multiple sequencing libraries including Gene Expression (GEX), 
+VDJ (Immune Receptor Diversity), and HTO (Hashtag Oligonucleotide) for demultiplexing and huIgκ cite-seq staining. The aim is to generate comprehensive multi-omics data 
+that enables deep analysis of transcriptomic and immune receptor diversity, along with cell-specific barcode information and the surface expression of huIgk.
