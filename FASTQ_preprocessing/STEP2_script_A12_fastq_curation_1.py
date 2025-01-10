@@ -1,14 +1,15 @@
 import os
 import glob
 from multiprocessing import Pool, Manager
-# Definir las rutas de los archivos de entrada y salida
-sam_file = '../../../../../jmolinav/Eliminar_reads_solapantes_A12/Results/solap_A12_reg_L001_ALIGNED_filtered.sam'  # El archivo SAM
-fastq_dir = '../1/'  # El directorio donde se encuentran los archivos FASTQ
-output_dir = './'  # Directorio para los archivos filtrados
 
-# Paso 1: Leer identificadores del archivo SAM en streaming
+# Define the input and output file paths
+sam_file = '../../../../../jmolinav/Eliminar_reads_solapantes_A12/Results/solap_A12_reg_L001_ALIGNED_filtered.sam'  # The SAM file
+fastq_dir = '../1/'  # The directory where the FASTQ files are located
+output_dir = './'  # Directory for the filtered output files
+
+# Step 1: Read identifiers from the SAM file in streaming mode
 def get_identifiers(sam_file):
-    print(f"[INFO] Leyendo identificadores del archivo SAM: {sam_file}")
+    print(f"[INFO] Reading identifiers from the SAM file: {sam_file}")
     identifiers = set()
     line_count = 0
     try:
@@ -16,74 +17,74 @@ def get_identifiers(sam_file):
             for line in sam:
                 line_count += 1
                 if line_count % 1000000 == 0:
-                    print(f"[DEBUG] Procesadas {line_count} líneas del archivo SAM")
-                if not line.startswith('@'):  # Ignorar encabezados
+                    print(f"[DEBUG] Processed {line_count} lines from the SAM file")
+                if not line.startswith('@'):  # Ignore headers
                     fields = line.split('\t')
-                    identifiers.add(fields[0])  # Identificador en la primera columna
-                # Diagnóstico adicional para verificar el crecimiento del conjunto
+                    identifiers.add(fields[0])  # Identifier in the first column
+                # Additional diagnostics to check the growth of the set
                 if line_count % 1000000 == 0:
-                    print(f"[DEBUG] Tamaño actual del conjunto de identificadores: {len(identifiers)}")
+                    print(f"[DEBUG] Current size of the identifier set: {len(identifiers)}")
     except MemoryError:
-        print(f"[ERROR] Se quedó sin memoria al procesar la línea {line_count}")
+        print(f"[ERROR] Ran out of memory while processing line {line_count}")
         raise
     except Exception as e:
-        print(f"[ERROR] Ocurrió un error inesperado en la línea {line_count}: {e}")
+        print(f"[ERROR] An unexpected error occurred on line {line_count}: {e}")
         raise
-    print(f"[INFO] Se completó la lectura del archivo SAM. Total de líneas procesadas: {line_count}. Identificadores únicos: {len(identifiers)}.")
+    print(f"[INFO] Finished reading the SAM file. Total lines processed: {line_count}. Unique identifiers: {len(identifiers)}.")
     return identifiers
 
-# Paso 2: Procesar un único archivo FASTQ en streaming
+# Step 2: Process a single FASTQ file in streaming mode
 def process_fastq(args):
     fastq_file, identifiers = args
     output_fastq = os.path.join(output_dir, os.path.basename(fastq_file).replace('.fastq', '_filtered.fastq'))
-    print(f"[INFO] Procesando archivo FASTQ: {fastq_file}")
+    print(f"[INFO] Processing FASTQ file: {fastq_file}")
     try:
         with open(fastq_file, 'r') as fastq, open(output_fastq, 'w') as output:
             while True:
-                header = fastq.readline().strip()  # Línea 1: encabezado
-                if not header:  # Fin del archivo
+                header = fastq.readline().strip()  # Line 1: header
+                if not header:  # End of file
                     break
-                sequence = fastq.readline().strip()  # Línea 2: secuencia
-                plus = fastq.readline().strip()     # Línea 3: símbolo '+'
-                quality = fastq.readline().strip()  # Línea 4: calidad
+                sequence = fastq.readline().strip()  # Line 2: sequence
+                plus = fastq.readline().strip()     # Line 3: '+' symbol
+                quality = fastq.readline().strip()  # Line 4: quality
 
-                fastq_id = header.split()[0][1:]  # Extraer identificador
-                if fastq_id not in identifiers:  # Filtrar por identificadores
+                fastq_id = header.split()[0][1:]  # Extract identifier
+                if fastq_id not in identifiers:  # Filter by identifiers
                     output.write(f"{header}\n{sequence}\n{plus}\n{quality}\n")
     except Exception as e:
-        print(f"[ERROR] Error al procesar el archivo FASTQ {fastq_file}: {e}")
+        print(f"[ERROR] Error while processing the FASTQ file {fastq_file}: {e}")
         raise
-    print(f"[INFO] Filtrado completado para: {fastq_file} -> {output_fastq}")
-    return f"Filtrado completado para: {fastq_file} -> {output_fastq}"
+    print(f"[INFO] Filtering completed for: {fastq_file} -> {output_fastq}")
+    return f"Filtering completed for: {fastq_file} -> {output_fastq}"
 
-# Paso 3: Preparar y paralelizar
+# Step 3: Prepare and parallelize
 if __name__ == '__main__':
-    print("[INFO] Iniciando el script...")
+    print("[INFO] Starting the script...")
     try:
-        # Obtener identificadores del archivo SAM
+        # Get identifiers from the SAM file
         identifiers = get_identifiers(sam_file)
 
-        # Verificar si el directorio de salida existe
+        # Check if the output directory exists
         if not os.path.exists(output_dir):
-            print(f"[INFO] Creando el directorio de salida: {output_dir}")
+            print(f"[INFO] Creating the output directory: {output_dir}")
             os.makedirs(output_dir)
 
-        # Obtener lista de archivos FASTQ
+        # Get a list of FASTQ files
         fastq_files = glob.glob(os.path.join(fastq_dir, '*.fastq'))
-        print(f"[INFO] Se encontraron {len(fastq_files)} archivos FASTQ en {fastq_dir}.")
+        print(f"[INFO] Found {len(fastq_files)} FASTQ files in {fastq_dir}.")
 
-        # Usar un gestor para compartir identificadores entre procesos
+        # Use a manager to share identifiers between processes
         with Manager() as manager:
-            shared_identifiers = manager.list(identifiers)  # Compartir el conjunto como lista
+            shared_identifiers = manager.list(identifiers)  # Share the set as a list
             with Pool(processes=4) as pool:
-                print("[INFO] Iniciando procesamiento en paralelo...")
+                print("[INFO] Starting parallel processing...")
                 results = pool.map(process_fastq, [(f, shared_identifiers) for f in fastq_files])
 
-            # Mostrar resultados del procesamiento
-            print("[INFO] Procesamiento completado. Resultados:")
+            # Display processing results
+            print("[INFO] Processing completed. Results:")
             for result in results:
                 print(result)
     except MemoryError:
-        print("[ERROR] El script se quedó sin memoria durante la ejecución.")
+        print("[ERROR] The script ran out of memory during execution.")
     except Exception as e:
-        print(f"[ERROR] Ocurrió un error inesperado: {e}")
+        print(f"[ERROR] An unexpected error occurred: {e}")
