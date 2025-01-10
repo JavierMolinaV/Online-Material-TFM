@@ -1,1 +1,31 @@
+########### OBJECTIVE ##########
+The goal is to enhance VDJ analysis by removing reads that map to the intermediate region between heavy and light chains in the A12 construct. 
+This filtering improves the analysis by retaining only the reads relevant to the heavy and light chain detection. All code is duplicated because
+we have two groups of FASTQ Files each one corresponding to a different sequencing lane. The same procedure was done for spleen FASTQ preprocessing.
 
+########### REQUIRED PROGRAMS ###########
+- BWA - For aligning FASTQ sequences.
+
+- SAMtools - For processing SAM/BAM files.
+
+- AWK - For filtering lines in SAM files.
+
+- Required Python Libraries (Python v.3.10):
+  os and glob - Built-in Python libraries
+  multiprocessing - Built-in Python library
+  Manager - Part of the multiprocessing module
+
+########### STEPS & EXPLANATION ###########
+
+### STEP 1
+- Mapping Reads:
+  FASTQ files are aligned to the intergenic region reference using bwa mem to identify reads mapping to this region.
+- Extracting Aligned Reads:
+  Using samtools and grep, aligned reads specific to the A12 intergenic region are extracted into a SAM file for further processing.
+- CIGAR String Filtering:
+  Reads with soft-clipping (≤ 30 nucleotides) in the SAM file are retained to preserve potentially valuable sequences while filtering out extensively clipped reads. 
+  This is done using an AWK-based filtering approach.
+
+### STEP 2
+This script filters FASTQ files to remove reads present in a specified SAM file. It first extracts unique read identifiers from the SAM file and then processes each FASTQ file, 
+writing only reads not found in the SAM identifiers to new output files. Using multiprocessing, the script efficiently handles multiple FASTQ files in parallel to speed up the filtering process.
