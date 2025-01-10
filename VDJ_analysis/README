@@ -1,1 +1,3 @@
-
+############## OBJECTIVE ##############
+This analysis aims to perform BCR assignment and clonal analysis using scRepertoire. The goal is to identify and group B cell receptor (BCR) contigs, 
+assess clonal diversity, and compare clonal proportions across different samples. All libraries used are specified in the markdown document
