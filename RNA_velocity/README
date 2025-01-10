@@ -1,1 +1,29 @@
+############# OBJECTIVE #############
+
+This pipeline analyzes RNA velocity using Velocyto and scVelo to examine dynamic transcriptional changes in gene expression across clusters of cells. 
+The RNA velocity analysis aims to predict the future state of gene expression by utilizing spliced and unspliced transcript counts.
+
+############# STEPS ############# 
+
+### STEP 1: Seurat Processing
+Convert Seurat object data to Python/anndata format compatible with scVelo. Extract the counts matrix, metadata .csv, gene names .csv, and dimensional reduction 
+information for both WT mice and IghA12/+ mice (independently). Save the extracted data and prepare them for conversion into Python/anndata format.
+
+### STEP 2: Velocyto Processing
+Process the BAM file and generate a LOOM file for RNA velocity analysis. Run Velocyto (v.0.17) on the BAM file produced by cellranger. Using the following input parameters:
+filtered_barcodes.tsv from cellranger, GTF file for Mus musculus GRCm38 (excluding repetitive elements) and Mus musculus GRCm38 GTF file for gene annotation. The output is a
+LOOM file containing spliced, unspliced, and ambiguous counts.
+
+### STEP 3: scVelo Processing
+Perform RNA velocity analysis using scVelo and integrate the results with Seurat data. Use scVelo (v.1.26.4) in Python to load the LOOM file and the Seurat-derived anndata object.
+Merge the LOOM data with the Seurat anndata object using the utils.merge function. Ensure an appropriate proportion of unspliced reads (between 10% and 20%). Perform PCA and 
+test combinations of principal components and neighbors to calculate velocity vectors. Generate 2D velocity representations and calculate the average speed and coherence of velocity vectors.
+
+############# PROGRAMS & LIBRARIES #############
+
+Velocyto (v.0.17): LOOM file generation
+scVelo (v.1.26.4): RNA velocity analysis in Python.
+Seurat object: Clustering and metadata information 
+anndata (v.0.10.8): Data format used for compatibility between Seurat and scVelo.
+Python (v.3.10)
 
