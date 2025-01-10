@@ -1,1 +1,10 @@
+############ OBJECTIVE ############ 
+This script performs a Multiple Sequence Alignment (MSA) of CDR3 amino acid sequences and generates a sequence logo that visually represents the frequency of amino acids at each position. 
+The script uses Clustal Omega for the MSA and logomaker to generate the sequence logo. 
 
+############ LIBRARIES ############
+BioPython (v1.83): For sequence processing, alignment, and manipulation (Bio.AlignIO, Bio.Seq, Bio.SeqRecord, Bio.Align.Applications.ClustalwCommandline, Bio.SeqIO).
+logomaker (v0.8): For creating sequence logos based on amino acid frequencies.
+matplotlib: For plotting the sequence logo.
+numpy: For matrix and frequency calculations.
+pandas: For managing data and creating the frequency matrix.
